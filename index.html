@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
-<style>:root{--bg:#151826;--panel:#1e2236;--line:#2c3250;--text:#e8eaf6;--mut:#8f95b8;--play:#ff5c7a;--amber:#ffb454;--bar:96px;color-scheme:dark}
+<style>:root{--bg:#151826;--panel:#1e2236;--line:#2c3250;--text:#e8eaf6;--mut:#8f95b8;--play:#ff5c7a;--amber:#ffb454;--bar:96px;--head:132px;--audio:#4cc3e8;--midi:#b58cff;color-scheme:dark}
 *{box-sizing:border-box;margin:0}
 html,body{height:100%}
 body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;
@@ -17,8 +17,11 @@ button{font:inherit;color:inherit;background:var(--panel);border:1px solid var(-
 button:active{background:var(--line)}
 :focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .mut{color:var(--mut);font-size:13px}
+#save-status{flex:0 0 76px;align-self:center;text-align:center;font-size:12px;line-height:1.2;color:#6fcf97}
+#save-status[data-state=pending]{color:var(--amber)}
+#save-status[data-state=error]{color:var(--play);font-weight:600}
 .top{display:flex;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line)}
-#proj-name{flex:1;text-align:left;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#proj-name{flex:1;min-width:0;text-align:left;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dirty #proj-name::after{content:" •";color:var(--amber)}
 .transport{display:grid;grid-template-columns:auto 1fr;gap:10px 12px;padding:10px 12px;border-bottom:1px solid var(--line);align-items:center}
 .btns{display:flex;gap:8px}
@@ -31,31 +34,52 @@ button:active{background:var(--line)}
 #bpm{width:84px;min-height:44px;text-align:center;font:inherit;font-weight:600;font-size:18px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px}
 #btn-metro{margin-left:auto}
 #btn-metro[aria-pressed=true]{border-color:var(--amber);color:var(--amber)}
-#timeline{flex:1;min-height:0;overflow-x:auto;overflow-y:hidden}
-#tl-inner{position:relative;height:100%;display:flex;flex-direction:column}
-#ruler{display:flex;height:40px;flex:none;touch-action:none;background:var(--panel);border-bottom:1px solid var(--line);cursor:col-resize}
+#timeline{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+#tl-inner{position:relative;min-height:100%;display:flex;flex-direction:column}
+#ruler{position:sticky;top:0;z-index:4;display:flex;height:52px;flex:none;background:var(--panel);border-bottom:1px solid var(--line)}
+.corner{position:sticky;left:0;z-index:5;flex:0 0 var(--head);display:flex;align-items:center;padding:0 6px;background:var(--panel);border-right:1px solid var(--line)}
+#btn-add-track{width:100%;padding:0 6px;font-weight:600}
+#ruler-bars{display:flex;flex:none;touch-action:none;cursor:col-resize}
 .bar{flex:0 0 var(--bar);border-left:1px solid var(--line);padding:4px 6px;font-size:12px;color:var(--mut);
  background:repeating-linear-gradient(90deg,transparent 0 23px,var(--line) 23px 24px) bottom/100% 8px no-repeat}
-.lanes{flex:1;background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px var(--bar))}
-.empty{position:sticky;left:16px;display:inline-block;margin:20px 16px;color:var(--mut);max-width:70vw}
-#playhead{position:absolute;top:0;bottom:0;left:0;width:2px;background:var(--play);pointer-events:none;will-change:transform}
+.track{display:flex;height:100px;flex:none;border-bottom:1px solid var(--line)}
+.track.audio{--tc:var(--audio)}
+.track.midi{--tc:var(--midi)}
+.thead{position:sticky;left:0;z-index:3;flex:0 0 var(--head);width:var(--head);min-width:0;max-width:var(--head);overflow:hidden;display:flex;flex-direction:column;gap:4px;padding:4px 6px 4px 8px;background:var(--panel);border-right:1px solid var(--line);border-left:4px solid var(--tc)}
+.tname{min-width:0;text-align:left;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 8px}
+.tmeta{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.chip{font-size:12px;font-weight:600;color:var(--tc);border:1px solid var(--tc);border-radius:999px;padding:2px 9px}
+.tdel{padding:0;flex:0 0 44px}
+.tlane{flex:1;background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px var(--bar)),color-mix(in srgb,var(--tc) 8%,transparent)}
+.fill{flex:1;display:flex}
+.fgutter{position:sticky;left:0;z-index:3;flex:0 0 var(--head);background:var(--panel);border-right:1px solid var(--line)}
+.flane{flex:1;background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px var(--bar))}
+.empty{position:sticky;left:calc(var(--head) + 16px);display:inline-block;margin:20px 16px;color:var(--mut);max-width:min(70vw,320px)}
+.empty[hidden]{display:none}
+#playhead{position:absolute;top:0;bottom:0;left:0;width:2px;background:var(--play);pointer-events:none;will-change:transform;z-index:6}
 dialog{margin:auto;width:min(92vw,420px);max-height:85vh;overflow:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:16px}
 dialog::backdrop{background:rgba(5,6,12,.7)}
 dialog h2{font-size:18px;margin-bottom:12px}
 #form-new{display:flex;gap:8px;margin-bottom:12px}
-#new-name{flex:1;min-width:0;min-height:44px;padding:0 10px;font:inherit;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;user-select:text}
+#new-name,#rename-input{flex:1;min-width:0;width:100%;min-height:44px;padding:0 10px;font:inherit;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;user-select:text}
 #plist{list-style:none;padding:0;margin-bottom:12px;display:grid;gap:8px}
 #plist li{display:flex;gap:8px}
 #plist .open{flex:1;text-align:left;overflow:hidden}
 #plist .open small{display:block;color:var(--mut)}
 #plist .none{color:var(--mut)}
 .row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.addopts{display:grid;gap:8px}
+.opt{text-align:left;font-weight:600;min-height:56px;border-left:4px solid var(--tc)}
+.opt.audio{--tc:var(--audio)}
+.opt.midi{--tc:var(--midi)}
+#dlg-rename .row{flex-direction:row-reverse;justify-content:flex-start}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
 <header class="top">
   <button id="proj-name" aria-label="Abrir lista de proyectos">Proyecto</button>
+  <span id="save-status" role="status" aria-live="polite" data-state="saved">Guardado ✓</span>
   <button id="btn-save">Guardar</button>
 </header>
 <section class="transport">
@@ -75,8 +99,12 @@ dialog h2{font-size:18px;margin-bottom:12px}
 </section>
 <main id="timeline">
   <div id="tl-inner">
-    <div id="ruler" aria-label="Regla de compases: toca o arrastra para mover el cursor"></div>
-    <div class="lanes"><p class="empty">Aún no hay pistas. Se añaden en la etapa 2.</p></div>
+    <div id="ruler">
+      <div class="corner"><button id="btn-add-track">+ Pista</button></div>
+      <div id="ruler-bars" aria-label="Regla de compases: toca o arrastra para mover el cursor"></div>
+    </div>
+    <div id="tracks"></div>
+    <div class="fill"><div class="fgutter"></div><div class="flane"><p class="empty" id="empty">Aún no hay pistas. Toca «+ Pista» para crear una de audio o MIDI.</p></div></div>
     <div id="playhead"></div>
   </div>
 </main>
@@ -93,6 +121,21 @@ dialog h2{font-size:18px;margin-bottom:12px}
   <form method="dialog">
     <p id="confirm-msg"></p>
     <div class="row"><button value="cancel">Cancelar</button><button value="ok">Aceptar</button></div>
+  </form>
+</dialog>
+<dialog id="dlg-add">
+  <h2>Nueva pista</h2>
+  <form method="dialog" class="addopts">
+    <button class="opt audio" value="audio">Pista de audio</button>
+    <button class="opt midi" value="midi">Pista MIDI</button>
+    <button value="cancel">Cancelar</button>
+  </form>
+</dialog>
+<dialog id="dlg-rename">
+  <form method="dialog">
+    <h2>Renombrar pista</h2>
+    <input id="rename-input" type="text" maxlength="24" autocomplete="off" aria-label="Nombre de la pista">
+    <div class="row"><button value="ok">Aceptar</button><button value="cancel" formnovalidate>Cancelar</button></div>
   </form>
 </dialog>
 <script>/** Funciones puras de tiempo y tempo (sin audio ni DOM, fáciles de probar). */
@@ -114,11 +157,44 @@ function formatTime(seconds) {
   return p(Math.floor(tenths / 600)) + ':' + p(Math.floor((tenths % 600) / 10)) + '.' + (tenths % 10);
 }
 
-/** Modelo de proyecto. Las etapas siguientes añadirán pistas, clips y mezcla aquí. */
+/** Modelo de proyecto: ajustes de tiempo y lista de pistas. Las etapas siguientes añadirán clips y mezcla. */
+const newId = () => (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'p' + Date.now() + Math.random().toString(36).slice(2, 8);
+
 function createProject(name) {
   const now = Date.now();
-  const id = (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'p' + now + Math.random().toString(36).slice(2, 8);
-  return { id, name: (name || '').trim() || 'Proyecto sin título', bpm: 120, bars: 16, beatsPerBar: 4, createdAt: now, updatedAt: now, version: 1 };
+  return { id: newId(), name: (name || '').trim() || 'Proyecto sin título', bpm: 120, bars: 16, beatsPerBar: 4,
+    tracks: [], trackSeq: { audio: 0, midi: 0 }, createdAt: now, updatedAt: now, version: 2 };
+}
+
+/** Completa proyectos guardados con versiones anteriores (v0.1.x no tenía pistas). */
+function normalizeProject(p) {
+  if (!Array.isArray(p.tracks)) p.tracks = [];
+  p.tracks = p.tracks.filter(t => t && (t.type === 'audio' || t.type === 'midi') && typeof t.name === 'string' && t.id);
+  if (!p.trackSeq || typeof p.trackSeq !== 'object') p.trackSeq = { audio: 0, midi: 0 };
+  for (const k of ['audio', 'midi']) if (!Number.isFinite(p.trackSeq[k])) p.trackSeq[k] = p.tracks.filter(t => t.type === k).length;
+  return p;
+}
+
+const TRACK_NAME_MAX = 24;
+
+function addTrack(p, type) {
+  if (type !== 'audio' && type !== 'midi') throw new Error('Tipo de pista no válido: ' + type);
+  p.trackSeq[type] = (p.trackSeq[type] || 0) + 1;
+  const track = { id: newId(), type, name: (type === 'audio' ? 'Audio ' : 'MIDI ') + p.trackSeq[type] };
+  p.tracks.push(track);
+  return track;
+}
+
+function renameTrack(p, id, name) {
+  const t = p.tracks.find(x => x.id === id), n = (name || '').trim().slice(0, TRACK_NAME_MAX);
+  if (!t || !n) return false;
+  t.name = n; return true;
+}
+
+function deleteTrack(p, id) {
+  const i = p.tracks.findIndex(x => x.id === id);
+  if (i < 0) return false;
+  p.tracks.splice(i, 1); return true;
 }
 
 /** Guardado local (localStorage). Los audios grandes irán a IndexedDB en etapas posteriores. */
@@ -201,30 +277,69 @@ class Transport {
   }
 }
 
+/** Guardado automático: espera (debounce) y evita escrituras redundantes. Sin DOM: se prueba con temporizadores falsos. */
+const autoSetTimer = (f, ms) => setTimeout(f, ms), autoClearTimer = id => clearTimeout(id);
+
+class Autosaver {
+  constructor({ snapshot, write, onState, delay = 500, setTimer = autoSetTimer, clearTimer = autoClearTimer }) {
+    Object.assign(this, { snapshot, write, onState, delay, setTimer, clearTimer });
+    this.last = null; this.timer = null; this.dirty = false;
+  }
+  /** true si hay cambios sin guardar (pendientes o con error). */
+  get pending() { return this.dirty; }
+  /** Fija el estado guardado actual (al abrir un proyecto). No escribe. */
+  reset() { this._clear(); this.last = this.snapshot(); this.dirty = false; this.onState('saved'); }
+  /** Avisa de un cambio: programa un único guardado tras `delay` ms. */
+  change() {
+    this.dirty = true; this.onState('pending'); this._clear();
+    this.timer = this.setTimer(() => { this.timer = null; this.flush(); }, this.delay);
+  }
+  /** Guarda ya (botón Guardar, cambio de proyecto, app en segundo plano). Devuelve true si quedó guardado. */
+  flush() {
+    this._clear();
+    const snap = this.snapshot();
+    if (snap === this.last) { this.dirty = false; this.onState('saved'); return true; }   // nada nuevo: no se escribe
+    try { this.write(); } catch { this.dirty = true; this.onState('error'); return false; }
+    this.last = snap; this.dirty = false; this.onState('saved'); return true;
+  }
+  /** Descarta el guardado pendiente (p. ej. al borrar el proyecto abierto). */
+  cancel() { this._clear(); this.dirty = false; }
+  _clear() { if (this.timer !== null) { this.clearTimer(this.timer); this.timer = null; } }
+}
+
 
 const $ = s => document.querySelector(s);
-const BAR_PX = 96;
+const BAR_PX = 96, HEAD_W = 132;   // HEAD_W = ancho de la columna fija de pistas (igual que --head en CSS)
+document.documentElement.style.setProperty('--head', HEAD_W + 'px');
 const transport = new Transport();
-let project, dirty = false;
-
-function setDirty(v) { dirty = v; document.body.classList.toggle('dirty', v); }
+let project;
+const STATUS_TEXT = { saved: 'Guardado ✓', pending: 'Cambios pendientes…', error: 'Error al guardar' };
+function showStatus(state) {
+  const s = $('#save-status'); s.dataset.state = state; s.textContent = STATUS_TEXT[state];
+  document.body.classList.toggle('dirty', state !== 'saved');
+}
+const saver = new Autosaver({ snapshot: () => JSON.stringify({ ...project, updatedAt: 0 }), write: () => saveProject(project), onState: showStatus, delay: 500 });
 
 function buildTimeline() {
-  const r = $('#ruler'); r.replaceChildren();
+  const r = $('#ruler-bars'); r.replaceChildren();
   for (let i = 1; i <= project.bars; i++) { const d = document.createElement('div'); d.className = 'bar'; d.textContent = i; r.append(d); }
-  $('#tl-inner').style.width = project.bars * BAR_PX + 'px';
-  $('#timeline').scrollLeft = 0;
+  $('#tl-inner').style.width = HEAD_W + project.bars * BAR_PX + 'px';
+  $('#timeline').scrollLeft = 0; $('#timeline').scrollTop = 0;
+  renderTracks();
 }
 
 function render() {
   if (!project) return;
-  const b = transport.currentBeat(), x = b / project.beatsPerBar * BAR_PX, tl = $('#timeline');
+  const b = transport.currentBeat(), x = HEAD_W + b / project.beatsPerBar * BAR_PX, tl = $('#timeline'), ph = $('#playhead');
   $('#pos').textContent = formatPosition(b, project.beatsPerBar);
   $('#time').textContent = formatTime(b * 60 / project.bpm);
-  $('#playhead').style.transform = 'translateX(' + x + 'px)';
-  if (transport.state === 'playing' && (x > tl.scrollLeft + tl.clientWidth * 0.85 || x < tl.scrollLeft)) tl.scrollLeft = Math.max(0, x - tl.clientWidth * 0.15);
+  if (transport.state === 'playing' && (x > tl.scrollLeft + tl.clientWidth * 0.85 || x < tl.scrollLeft + HEAD_W))
+    tl.scrollLeft = Math.max(0, x - HEAD_W - (tl.clientWidth - HEAD_W) * 0.15);
+  ph.style.transform = 'translateX(' + x + 'px)';
+  ph.style.visibility = x < tl.scrollLeft + HEAD_W ? 'hidden' : 'visible';   // oculto si queda bajo la columna de pistas
 }
 function loop() { render(); if (transport.state === 'playing') requestAnimationFrame(loop); }
+$('#timeline').addEventListener('scroll', render, { passive: true });
 
 transport.onState = s => {
   $('#btn-play').setAttribute('aria-pressed', s === 'playing');
@@ -234,16 +349,17 @@ transport.onState = s => {
 };
 
 function openProject(p) {
-  project = p; transport.stop();
+  normalizeProject(p); project = p; transport.stop();
   transport.configure({ bpm: p.bpm, beatsPerBar: p.beatsPerBar, totalBeats: p.bars * p.beatsPerBar });
   $('#proj-name').textContent = p.name; $('#bpm').value = p.bpm;
-  buildTimeline(); setDirty(false); render();
+  buildTimeline(); saver.reset(); render();
 }
 function newProject(name) { const p = createProject(name); saveProject(p); openProject(p); }
 
 function setBpm(v) {
-  v = clampBpm(v, project.bpm); project.bpm = v; transport.setBpm(v);
-  $('#bpm').value = v; setDirty(true); render();
+  v = clampBpm(v, project.bpm); $('#bpm').value = v;
+  if (v === project.bpm) return;
+  project.bpm = v; transport.setBpm(v); saver.change(); render();
 }
 
 $('#btn-play').onclick = () => transport.play();
@@ -253,21 +369,68 @@ $('#bpm-down').onclick = () => setBpm(project.bpm - 1);
 $('#bpm-up').onclick = () => setBpm(project.bpm + 1);
 $('#bpm').onchange = e => setBpm(e.target.value);
 $('#btn-metro').onclick = e => { transport.metronome = !transport.metronome; e.currentTarget.setAttribute('aria-pressed', transport.metronome); };
-$('#btn-save').onclick = () => { saveProject(project); setDirty(false); };
+$('#btn-save').onclick = () => saver.flush();
 
-const ruler = $('#ruler');
-const seekFrom = e => { const x = e.clientX - $('#tl-inner').getBoundingClientRect().left; transport.seek(x / BAR_PX * project.beatsPerBar); render(); };
+const ruler = $('#ruler-bars');
+const seekFrom = e => { const x = e.clientX - ruler.getBoundingClientRect().left; transport.seek(x / BAR_PX * project.beatsPerBar); render(); };
 ruler.addEventListener('pointerdown', e => { ruler.setPointerCapture(e.pointerId); seekFrom(e); ruler.onpointermove = seekFrom; });
 ruler.addEventListener('pointerup', () => { ruler.onpointermove = null; });
 ruler.addEventListener('pointercancel', () => { ruler.onpointermove = null; });
 
+/* ---------- Diálogos ---------- */
 const dlg = $('#dlg-projects'), cdlg = $('#dlg-confirm');
-function askConfirm(msg) {
-  return new Promise(res => {
-    $('#confirm-msg').textContent = msg; cdlg.returnValue = '';
-    cdlg.onclose = () => res(cdlg.returnValue === 'ok'); cdlg.showModal();
-  });
+function pickDialog(d) {
+  return new Promise(res => { d.returnValue = ''; d.onclose = () => res(d.returnValue); d.showModal(); });
 }
+function askConfirm(msg) {
+  $('#confirm-msg').textContent = msg;
+  return pickDialog(cdlg).then(v => v === 'ok');
+}
+
+/* ---------- Pistas ---------- */
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
+
+function renderTracks() {
+  const box = $('#tracks'); box.replaceChildren();
+  for (const t of project.tracks) {
+    const row = el('div', 'track ' + t.type), head = el('div', 'thead'), meta = el('div', 'tmeta');
+    const name = el('button', 'tname', t.name), del = el('button', 'tdel', '✕');
+    name.title = t.name;
+    name.setAttribute('aria-label', 'Renombrar pista ' + t.name);
+    del.setAttribute('aria-label', 'Borrar pista ' + t.name);
+    name.onclick = async () => {
+      const input = $('#rename-input'); input.value = t.name;
+      const done = pickDialog($('#dlg-rename')); input.focus(); input.select();
+      if ((await done) === 'ok' && renameTrack(project, t.id, input.value)) { saver.change(); renderTracks(); }
+    };
+    del.onclick = async () => {
+      if (!(await askConfirm('¿Borrar la pista "' + t.name + '"?'))) return;
+      if (deleteTrack(project, t.id)) { saver.change(); renderTracks(); }
+    };
+    meta.append(el('span', 'chip', t.type === 'audio' ? 'Audio' : 'MIDI'), del);
+    head.append(name, meta); row.append(head, el('div', 'tlane')); box.append(row);
+  }
+  $('#empty').hidden = project.tracks.length > 0;
+}
+
+$('#btn-add-track').onclick = async () => {
+  const type = await pickDialog($('#dlg-add'));
+  if (type !== 'audio' && type !== 'midi') return;
+  addTrack(project, type); saver.change(); renderTracks();
+  $('#timeline').scrollTop = $('#timeline').scrollHeight;
+};
+
+/* ---------- Guardado ---------- */
+async function leaveProject() {   // guarda lo pendiente antes de cambiar de proyecto
+  if (!saver.pending) return true;
+  if (saver.flush()) return true;
+  return askConfirm('No se pudo guardar el proyecto actual. ¿Continuar y perder los últimos cambios?');
+}
+const flushNow = () => { if (project && saver.pending) saver.flush(); };   // app en segundo plano o cerrándose
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });
+addEventListener('pagehide', flushNow);
+
+/* ---------- Proyectos ---------- */
 function refreshList() {
   const ul = $('#plist'); ul.replaceChildren();
   const items = listProjects();
@@ -277,12 +440,13 @@ function refreshList() {
     open.className = 'open'; open.textContent = it.name;
     const small = document.createElement('small'); small.textContent = new Date(it.updatedAt).toLocaleString('es'); open.append(small);
     open.onclick = async () => {
-      if (dirty && !(await askConfirm('Hay cambios sin guardar. ¿Abrir otro proyecto de todas formas?'))) return;
+      if (!(await leaveProject())) return;
       const p = loadProject(it.id); if (p) { openProject(p); dlg.close(); }
     };
     del.textContent = 'Borrar'; del.setAttribute('aria-label', 'Borrar ' + it.name);
     del.onclick = async () => {
       if (!(await askConfirm('¿Borrar "' + it.name + '"? No se puede deshacer.'))) return;
+      if (it.id === project.id) saver.cancel();   // evita que un guardado pendiente reviva el proyecto borrado
       deleteProject(it.id);
       if (it.id === project.id) { const rest = listProjects(); rest.length ? openProject(loadProject(rest[0].id)) : newProject('Proyecto 1'); }
       refreshList();
@@ -294,7 +458,7 @@ $('#proj-name').onclick = () => { refreshList(); dlg.showModal(); };
 $('#dlg-close').onclick = () => dlg.close();
 $('#form-new').onsubmit = async e => {
   e.preventDefault();
-  if (dirty && !(await askConfirm('Hay cambios sin guardar. ¿Crear un proyecto nuevo de todas formas?'))) return;
+  if (!(await leaveProject())) return;
   newProject($('#new-name').value); $('#new-name').value = ''; dlg.close();
 };
 
