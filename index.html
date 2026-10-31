@@ -74,9 +74,33 @@ dialog h2{font-size:18px;margin-bottom:12px}
 .opt.midi{--tc:var(--midi)}
 #dlg-rename .row{flex-direction:row-reverse;justify-content:flex-start}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+/* Horizontal en móvil: barra superior compacta (1 fila si cabe, 2 si no) y más espacio para la Playlist */
+@media (orientation:landscape) and (max-height:520px){
+  #bars{display:flex;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--line)}
+  .top{flex:100 1 0;min-width:268px;border-bottom:0;padding:4px 8px}
+  .transport{flex:1 1 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 8px;border-bottom:0}
+  .top button,.transport button,#bpm{min-height:40px;min-width:40px}
+  #proj-name,#btn-save{padding:0 10px}
+  #save-status{flex-basis:72px}
+  .btns{gap:6px}
+  .btns button{padding:0}
+  .readout{min-width:84px}
+  .readout b{font-size:19px}
+  .readout span{font-size:11px}
+  .tempo{gap:4px}
+  #btn-metro{margin-left:0;padding:0 8px;font-size:13px}
+  #bpm{width:56px;font-size:16px}
+  #ruler{height:44px}
+  #btn-add-track{min-height:40px}
+  .track{height:84px}
+  .thead{gap:0;padding:2px 6px 2px 8px}
+  .tname,.tdel{min-height:40px}
+}
 </style>
 </head>
 <body>
+<div id="bars">
 <header class="top">
   <button id="proj-name" aria-label="Abrir lista de proyectos">Proyecto</button>
   <span id="save-status" role="status" aria-live="polite" data-state="saved">Guardado ✓</span>
@@ -97,6 +121,7 @@ dialog h2{font-size:18px;margin-bottom:12px}
     <button id="btn-metro" aria-pressed="true">Metrónomo</button>
   </div>
 </section>
+</div>
 <main id="timeline">
   <div id="tl-inner">
     <div id="ruler">

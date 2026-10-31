@@ -1,5 +1,5 @@
 // Al cambiar cualquier archivo de la app, sube el número de versión para que se actualice la caché.
-const V = 'mi-daw-v4';
+const V = 'mi-daw-v5';
 const FILES = ['./', './index.html', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(V).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(caches.keys()
